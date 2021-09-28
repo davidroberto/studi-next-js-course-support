@@ -1,12 +1,15 @@
-import Link from 'next/link';
 
-export default function Cocktail({cocktail}) {
+import { ICocktailResponse, ICocktail } from '../../types/cocktailType';
+import { GetStaticPaths, InferGetStaticPropsType } from 'next';
+import Menu from '../../components/Menu';
+
+const Cocktail = (
+  { cocktail, cocktails }: InferGetStaticPropsType<typeof getStaticProps> 
+) => {
     return (
         <div >
           <header>
-            <Link href={'/'}>
-                <a>Home</a>
-            </Link>
+            <Menu cocktails={cocktails.drinks}/>
           </header>
     
           <main className="title">
@@ -14,6 +17,14 @@ export default function Cocktail({cocktail}) {
             <section>
                 <article>
                     <h2>{cocktail.strDrink}</h2>
+                    <p>{cocktail.strInstructions}</p>
+
+                    { cocktail.strDrinkThumb ?
+                      <img src={cocktail.strDrinkThumb}/>
+                    :
+                      <p>Pas d'image pour ce cocktail</p>
+                    }
+
                 </article>
             </section>
           </main>
@@ -25,7 +36,7 @@ export default function Cocktail({cocktail}) {
       )
 }
 
-export async function getStaticPaths() {
+export const getStaticPaths: GetStaticPaths = async () => {
     const url = "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita";
   
     const response = await fetch(url);
@@ -45,23 +56,26 @@ export async function getStaticPaths() {
 }
 
 
-export async function getStaticProps({params}) {
+export const getStaticProps = async ({params}) => {
     const url = "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita";
   
     const response = await fetch(url);
-    const cocktails = await response.json();
+    const cocktails: ICocktailResponse = await response.json();
 
     const id = params.id;
 
-    let cocktail = cocktails.drinks.filter(cocktail => {
+    let cocktailFiltered = cocktails.drinks.filter(cocktail => {
         return cocktail.idDrink === id;
     });
 
-    cocktail = cocktail[0];
+    const cocktail: ICocktail = cocktailFiltered[0];
   
     return {
       props: {
-        cocktail
+        cocktail,
+        cocktails
       } 
     }
 }
+
+export default Cocktail;
